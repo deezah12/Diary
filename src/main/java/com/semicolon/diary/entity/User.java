@@ -5,13 +5,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
-@RequiredArgsConstructor
 public class User {
 
     @Id
@@ -21,8 +19,10 @@ public class User {
     private String password;
     private String firstName;
     private String lastName;
-    private Boolean isVerified;
+    private boolean isVerified = false;
 
+
+    public User(){}
     public User(String firstName, String lastName, String emailAddress, String password) {
         this.firstName = firstName;
         this.lastName = lastName;

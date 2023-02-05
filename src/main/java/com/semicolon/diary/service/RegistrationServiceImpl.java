@@ -61,7 +61,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .orElseThrow(() -> new GenericException("Invalid Token"));
 
         if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Token has expired");
+            throw new GenericException("Token has expired");
         }
         tokenService.setTokenConfirmationAt(token.getToken());
         userService.enableUser(tokenConfirmationRequest.getEmailAddress());
@@ -73,7 +73,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     public String resendToken(ResendTokenRequest resendTokenRequest) throws MessagingException {
         User foundUser = userService.getByEmailAddress(resendTokenRequest.getEmailAddress()).orElseThrow(() -> new
                 IllegalStateException("this email does not exist"));
-        if (foundUser.getIsVerified().equals(true)) throw new GenericException("Already verified");
+        if (foundUser.isVerified()) throw new GenericException("Already verified");
         else {
             String token = userService.generateToken(foundUser);
             emailSender.send(resendTokenRequest.getEmailAddress(), buildEmail(foundUser.getFirstName(), token));
@@ -85,7 +85,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     public String login(LoginRequest loginRequest) {
         var foundUser = userService.getByEmailAddress(loginRequest.getEmailAddress());
         if (Objects.isNull(foundUser)) throw new GenericException("user does not exist");
-        if (foundUser.get().getIsVerified().equals(false)) throw new GenericException("user has not been verified");
+        if (!foundUser.get().isVerified()) throw new GenericException("user has not been verified");
         try {
             if (!BCrypt.checkpw(loginRequest.getPassword(), foundUser.get().getPassword())) {
                 throw new GenericException("password does not match");

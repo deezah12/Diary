@@ -12,6 +12,7 @@ import com.semicolon.diary.repositories.UserRepository;
 import com.semicolon.diary.service.inter.TokenService;
 import com.semicolon.diary.service.inter.UserService;
 import jakarta.mail.MessagingException;
+import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
     @Autowired
     TokenService tokenService;
@@ -87,7 +89,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void enableUser(String email) {
         var foundEmail = userRepository.findByEmailAddressIgnoreCase(email).orElseThrow(() -> new GenericException("invalid email"));
-        foundEmail.setIsVerified(true);
+        foundEmail.setVerified(true);
         userRepository.save(foundEmail);
     }
 

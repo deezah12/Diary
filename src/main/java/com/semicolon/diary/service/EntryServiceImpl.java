@@ -5,21 +5,27 @@ import com.semicolon.diary.entity.Entry;
 import com.semicolon.diary.exceptions.GenericException;
 import com.semicolon.diary.repositories.EntryRepository;
 import com.semicolon.diary.service.inter.EntryService;
+import com.semicolon.diary.service.inter.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+@Service
 public class EntryServiceImpl implements EntryService {
     @Autowired
     EntryRepository entryRepository;
+    @Autowired
+    UserService userService;
+
     @Override
-    public String create(EntryRequest entryRequest) {
+    public String create(String emailAddress, EntryRequest entryRequest) {
+       var user = userService.getByEmailAddress(emailAddress).get();
         Entry entry = new Entry(
                 entryRequest.getTitle(),
-                entryRequest.getBody()
+                entryRequest.getBody(),
+                user
         );
         entryRepository.save(entry);
-
        return "Moment created successfully";
     }
 
@@ -33,9 +39,10 @@ public class EntryServiceImpl implements EntryService {
     }
 
     @Override
-    public void delete(Long id) {
+    public String delete(Long id) {
         var foundEntry = entryRepository.findById(id).orElseThrow(()-> new GenericException("Entry not found"));
         entryRepository.delete(foundEntry);
+        return "Deleted successfully";
     }
 
     @Override

@@ -1,9 +1,6 @@
 package com.semicolon.diary.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -20,10 +17,14 @@ public class Entry {
     private Long entryId;
     private String title;
     private String body;
-    private LocalDateTime date;
+    private LocalDateTime date = LocalDateTime.now();
+    @ManyToOne
+    User user;
 
-    public Entry(String title, String body) {
+    public Entry(String title, String body, User user) {
         this.title = title;
         this.body = body;
+        this.user = user;
     }
+
 }
