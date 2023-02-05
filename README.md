@@ -30,7 +30,7 @@ Navigate to the project directory: cd diary-webapp
 Build the project using maven: mvn clean install
 Create a database named diary in MySQL and update the database credentials in src/main/resources/application.properties
 Run the application using spring boot: mvn spring-boot:run
-The application will be available at http://localhost:8080/
+The application will be available at http://localhost:8084/
 
 Database Configuration
 
