@@ -27,6 +27,7 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     EmailSender emailSender;
 
+    @Autowired
     public UserServiceImpl(TokenService tokenService,UserRepository userRepository, EmailSender emailSender){
         this.tokenService = tokenService;
         this.userRepository = userRepository;
