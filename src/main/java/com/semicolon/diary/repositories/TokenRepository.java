@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface TokenRepository extends JpaRepository<Token, Long> {
 
-    Optional<Token> findByToken(String token);
+    Token findByToken(String token);
 
     void deleteTokenByExpiredAtBefore(LocalDateTime now);
     @Transactional
