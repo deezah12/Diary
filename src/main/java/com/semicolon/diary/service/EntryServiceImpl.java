@@ -19,7 +19,7 @@ public class EntryServiceImpl implements EntryService {
 
     @Override
     public String create(String emailAddress, EntryRequest entryRequest) {
-       var user = userService.getByEmailAddress(emailAddress).get();
+       var user = userService.getByEmailAddress(emailAddress);
         Entry entry = new Entry(
                 entryRequest.getTitle(),
                 entryRequest.getBody(),

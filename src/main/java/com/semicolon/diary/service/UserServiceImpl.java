@@ -4,7 +4,6 @@ import com.semicolon.diary.dto.ChangePasswordRequest;
 import com.semicolon.diary.dto.ForgotPasswordRequest;
 import com.semicolon.diary.dto.ResetPasswordRequest;
 import com.semicolon.diary.email.EmailSender;
-import com.semicolon.diary.email.EmailService;
 import com.semicolon.diary.entity.Token;
 import com.semicolon.diary.entity.User;
 import com.semicolon.diary.exceptions.GenericException;
@@ -20,23 +19,26 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.Optional;
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
-    @Autowired
+
     TokenService tokenService;
-    @Autowired
     UserRepository userRepository;
-    @Autowired
     EmailSender emailSender;
+
+    public UserServiceImpl(TokenService tokenService,UserRepository userRepository, EmailSender emailSender){
+        this.tokenService = tokenService;
+        this.userRepository = userRepository;
+        this.emailSender  = emailSender;
+    }
     @Override
-    public void getUser(User user) {
-        userRepository.save(user);
+    public User getUser(User user) {
+      return   userRepository.save(user);
     }
 
     @Override
-    public Optional<User> getByEmailAddress(String emailAddress) {
+    public User getByEmailAddress(String emailAddress) {
         return userRepository.findByEmailAddressIgnoreCase(emailAddress);
 
     }
@@ -46,15 +48,15 @@ public class UserServiceImpl implements UserService {
         var foundUser = userRepository.findByEmailAddressIgnoreCase(forgotPasswordRequest
                 .getEmailAddress());
         if (Objects.isNull(foundUser)) throw new GenericException("user does not exist");
-        String token = generateToken(foundUser.get());
-        emailSender.send(foundUser.get().getEmailAddress(), buildForgotPasswordEmail(foundUser.get().getLastName(), token));
+        String token = generateToken(foundUser);
+        emailSender.send(foundUser.getEmailAddress(), buildForgotPasswordEmail(foundUser.getLastName(), token));
         return token;
     }
 
     @Override
     public String resetPassword(ResetPasswordRequest resetPasswordRequest) {
-        var tokenChecked = tokenService.getConfirmationToken(resetPasswordRequest.getToken())
-                .orElseThrow(() -> new GenericException("Token does not exist"));
+        var tokenChecked = tokenService.getConfirmationToken(resetPasswordRequest.getToken());
+        if (Objects.isNull(tokenChecked)) throw new GenericException("invalid token");
 
         if (tokenChecked.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new GenericException("Token has expired");
@@ -64,8 +66,8 @@ public class UserServiceImpl implements UserService {
         }
         tokenService.getConfirmationToken(tokenChecked.getToken());
         var user = userRepository.findByEmailAddressIgnoreCase(resetPasswordRequest.getEmailAddress());
-        user.get().setPassword(hashPassword(resetPasswordRequest.getPassword()));
-        userRepository.save(user.get());
+        user.setPassword(hashPassword(resetPasswordRequest.getPassword()));
+        userRepository.save(user);
         return "Your password successfully updated.";
     }
 
@@ -74,8 +76,9 @@ public class UserServiceImpl implements UserService {
     }
 
     public String changePassword (ChangePasswordRequest changePasswordRequest){
-        var user = userRepository.findByEmailAddressIgnoreCase(changePasswordRequest.getEmailAddress())
-                .orElseThrow(() -> new GenericException("invalid details"));
+        var user = userRepository.findByEmailAddressIgnoreCase
+                (changePasswordRequest.getEmailAddress());
+        if (Objects.isNull(user)) throw new GenericException("invalid details");
 
         if (!BCrypt.checkpw(changePasswordRequest.getOldPassword(), user.getPassword())) {
             throw new GenericException("invalid details");
@@ -88,8 +91,9 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public void enableUser(String email) {
-        var foundEmail = userRepository.findByEmailAddressIgnoreCase(email).orElseThrow(() -> new GenericException("invalid email"));
-        foundEmail.setVerified(true);
+        var foundEmail = userRepository.findByEmailAddressIgnoreCase(email);
+       if (Objects.isNull(foundEmail)) throw  new GenericException("invalid email");
+       foundEmail.setVerified(true);
         userRepository.save(foundEmail);
     }
 

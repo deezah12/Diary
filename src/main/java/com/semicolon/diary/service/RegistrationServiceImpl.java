@@ -8,6 +8,7 @@ import com.semicolon.diary.service.inter.RegistrationService;
 import com.semicolon.diary.service.inter.TokenService;
 import com.semicolon.diary.service.inter.UserService;
 import jakarta.mail.MessagingException;
+import lombok.NoArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,20 +18,25 @@ import java.util.Objects;
 
 @Service
 public class RegistrationServiceImpl implements RegistrationService {
-    @Autowired
     UserService userService;
-    @Autowired
     EmailSender emailSender;
-    @Autowired
     TokenService tokenService;
+
+    @Autowired
+    public RegistrationServiceImpl(UserService userService,
+                                   EmailSender emailSender,
+                                   TokenService tokenService) {
+        this.userService = userService;
+        this.emailSender = emailSender;
+        this.tokenService = tokenService;
+    }
+
+
     @Override
     public SignUpResponse register(SignUpRequest signUpRequest) throws MessagingException {
-        boolean emailExists = userService
-                .getByEmailAddress(signUpRequest.getEmailAddress())
-                .isPresent();
-        if (emailExists)throw new IllegalStateException("Email Address already exists");
-
-        User user = new User(
+       var foundUser = userService.getByEmailAddress(signUpRequest.getEmailAddress());
+       if (!Objects.isNull(foundUser)) throw new GenericException("User already exist");
+       User user = new User(
                 signUpRequest.getFirstName(),
                 signUpRequest.getLastName(),
                 signUpRequest.getEmailAddress(),
@@ -57,8 +63,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Override
     public String tokenConfirmation(TokenConfirmationRequest tokenConfirmationRequest) {
-        var token = tokenService.getConfirmationToken(tokenConfirmationRequest.getToken())
-                .orElseThrow(() -> new GenericException("Invalid Token"));
+        var token = tokenService.getConfirmationToken(tokenConfirmationRequest.getToken());
 
         if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new GenericException("Token has expired");
@@ -71,8 +76,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Override
     public String resendToken(ResendTokenRequest resendTokenRequest) throws MessagingException {
-        User foundUser = userService.getByEmailAddress(resendTokenRequest.getEmailAddress()).orElseThrow(() -> new
-                IllegalStateException("this email does not exist"));
+        User foundUser = userService.getByEmailAddress(resendTokenRequest.getEmailAddress());
         if (foundUser.isVerified()) throw new GenericException("Already verified");
         else {
             String token = userService.generateToken(foundUser);
@@ -85,9 +89,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     public String login(LoginRequest loginRequest) {
         var foundUser = userService.getByEmailAddress(loginRequest.getEmailAddress());
         if (Objects.isNull(foundUser)) throw new GenericException("user does not exist");
-        if (!foundUser.get().isVerified()) throw new GenericException("user has not been verified");
+        if (!foundUser.isVerified()) throw new GenericException("user has not been verified");
         try {
-            if (!BCrypt.checkpw(loginRequest.getPassword(), foundUser.get().getPassword())) {
+            if (!BCrypt.checkpw(loginRequest.getPassword(), foundUser.getPassword())) {
                 throw new GenericException("password does not match");
             }
         } catch (GenericException e) {

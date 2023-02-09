@@ -11,8 +11,8 @@ import java.util.Optional;
 
 public interface UserService {
     String changePassword(ChangePasswordRequest changePasswordRequest);
-    void getUser(User user);
-    Optional<User> getByEmailAddress(String emailAddress);
+    User getUser(User user);
+    User getByEmailAddress(String emailAddress);
     String forgotPassword(ForgotPasswordRequest forgotPasswordRequest) throws MessagingException;
     String resetPassword(ResetPasswordRequest resetPasswordRequest);
     void enableUser(String email);

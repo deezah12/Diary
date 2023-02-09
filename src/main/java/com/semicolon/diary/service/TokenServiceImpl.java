@@ -18,7 +18,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public Optional<Token> getConfirmationToken(String token) {
+    public Token getConfirmationToken(String token) {
         return tokenRepository.findByToken(token);
     }
 
